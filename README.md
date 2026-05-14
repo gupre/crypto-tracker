@@ -1,73 +1,97 @@
-# React + TypeScript + Vite
+# CryptoTracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Дашборд для отслеживания криптовалют в реальном времени. Данные — CoinGecko API, цены обновляются автоматически каждые 30–60 секунд.
 
-Currently, two official plugins are available:
+🔗 **[Live Demo](https://crypto-tracker-gupre.vercel.app)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Функциональность
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- 📈 Список топ-50 монет по рыночной капитализации с пагинацией
+- 🔍 Поиск по названию и тикеру в реальном времени
+- 📊 Детальная страница монеты с интерактивным графиком (1D / 7D / 30D / 90D)
+- ⭐ Watchlist — избранные монеты с сохранением между сессиями
+- 🔄 Автообновление цен без перезагрузки страницы (polling)
+- 📱 Адаптивный дизайн
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Стек
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+| Технология | Версия | Назначение |
+|---|---|---|
+| React | 18 | UI |
+| TypeScript | 5 | Типизация |
+| Redux Toolkit | 2 | Стейт-менеджмент |
+| RTK Query | — | Запросы к API, кеширование, polling |
+| React Router | 6 | Клиентская маршрутизация |
+| Tailwind CSS | 4 | Стилизация |
+| Recharts | — | Графики цен |
+| Jest + RTL | — | Unit-тесты |
+| Vite | — | Сборка |
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Архитектура — Feature-Sliced Design (FSD)
+
+```
+src/
+├── app/
+│   └── providers/
+│       ├── store/        # Redux store, typed hooks
+│       └── router/       # React Router конфиг
+├── entities/
+│   └── coin/
+│       ├── api/          # RTK Query — getCoins, getCoinById, getCoinChart
+│       └── types/        # TypeScript типы Coin, CoinDetail, CoinMarketChart
+├── features/
+│   ├── watchlist/        # Slice + useWatchlist hook + WatchlistButton
+│   ├── search/           # Slice + SearchBar
+│   └── coin-chart/       # График с polling и выбором периода
+├── widgets/
+│   └── coin-table/       # Таблица монет
+├── pages/
+│   ├── coins-list/       # Главная — список, поиск, пагинация
+│   ├── coin-detail/      # Детальная — график, статистика, описание
+│   └── watchlist/        # Страница избранного
+└── shared/
+    ├── ui/               # Spinner, PriceChange, ErrorMessage, MainLayout
+    └── lib/              # formatPrice, formatMarketCap, formatDate
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Ключевые решения
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+**RTK Query polling** — цены обновляются автоматически: на главной каждые 60 сек, на детальной странице каждые 30 сек. RTK Query управляет жизненным циклом запроса: дедуплицирует вызовы, отменяет при размонтировании, инвалидирует кеш.
+
+**Watchlist persistence** — Redux slice синхронно пишет в `localStorage` при каждом изменении. При инициализации стора данные восстанавливаются — список сохраняется между сессиями.
+
+**FSD слои** — строгое соблюдение границ: `entities` не знают о `features`, `features` не знают о `pages`, `shared` не импортирует ничего выше себя.
+
+---
+
+## Запуск
+
+```bash
+git clone https://github.com/gupre/crypto-tracker.git
+cd crypto-tracker
+npm install
+npm run dev
 ```
+
+Откроется на `http://localhost:5173`
+
+---
+
+## Тесты
+
+```bash
+npm test
+```
+
+Покрыто unit-тестами:
+- `formatters.ts` — форматирование цен, капитализации, дат
+- `watchlistSlice` — добавление, удаление, защита от дублей, персистентность в localStorage
+- `PriceChange` — рендер положительных и отрицательных значений
