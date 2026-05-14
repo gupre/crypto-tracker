@@ -2,7 +2,7 @@
 
 Дашборд для отслеживания криптовалют в реальном времени. Данные — CoinGecko API, цены обновляются автоматически каждые 30–60 секунд.
 
-🔗 **[Live Demo](https://crypto-tracker-gupre.vercel.app)**
+🔗 **[Live Demo](https://gupre.github.io/crypto-tracker/)**
 
 ---
 
